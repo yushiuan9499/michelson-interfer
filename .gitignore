@@ -1,0 +1,6 @@
+moc_*
+Makefile
+.qmake.stash
+bin/
+build/
+compile_commands.json
