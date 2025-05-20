@@ -21,7 +21,7 @@ public:
   const std::vector<double> &getResults() const;
 
 public slots:
-  void analyze(const cv::Mat &frame, const bool isLastFrame);
+  void calculateMean(const cv::Mat &frame, const bool isLastFrame);
 signals:
   // this signal means that the analysis have done 10 frames
   // so the main window need to update

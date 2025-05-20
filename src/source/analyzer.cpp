@@ -10,7 +10,7 @@ void Analyzer::clearResults() { this->results.clear(); }
 const std::vector<double> &Analyzer::getResults() const {
   return this->results;
 }
-void Analyzer::analyze(const cv::Mat &frame, const bool isLastFrame) {
+void Analyzer::calculateMean(const cv::Mat &frame, const bool isLastFrame) {
   // Example: calculate mean pixel intensity as a simple analysis
   if (frame.empty())
     return;

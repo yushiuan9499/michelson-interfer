@@ -9,7 +9,7 @@ QT += core gui widgets charts
 OBJECTS_DIR = ../build/
 DESTDIR = ../bin/
 INCPATH += ./header /usr/include/opencv4
-LIBS += -L./header -L/usr/include/opencv4
+LIBS += -L./header -L/usr/include/opencv4 -lopencv_core -lopencv_videoio -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs
 
 # You can make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.

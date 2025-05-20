@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QtConcurrent/QtConcurrent>
 #include <fstream>
+#include <opencv2/opencv.hpp>
 
 FileIo::FileIo(QObject *parent) : QObject(parent) {}
 
