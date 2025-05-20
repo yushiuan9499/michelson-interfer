@@ -25,7 +25,8 @@ public slots:
 signals:
   // this signal means that the analysis have done 10 frames
   // so the main window need to update
-  void updateResults(const cv::Mat &frame, double *meanIntesity, int size);
+  void updateResults(const cv::Mat &frame, double *meanIntesity, int startFrame,
+                     int size);
 };
 
 #endif // ANALYZER_H

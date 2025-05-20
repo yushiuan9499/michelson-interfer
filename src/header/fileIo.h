@@ -12,6 +12,8 @@ class FileIo : public QObject {
 public:
   explicit FileIo(QObject *parent = nullptr);
 
+  cv::Mat getFrame(std::string filename, int index) const;
+  int getFrameCount(std::string filename) const;
   void readFramesAsync(const std::string &filename);
   int writeCsv(const std::string &filename, const std::vector<double> &data);
 

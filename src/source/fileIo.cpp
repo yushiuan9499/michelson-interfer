@@ -33,3 +33,19 @@ int FileIo::writeCsv(const std::string &filename,
   }
   return count;
 }
+
+cv::Mat FileIo::getFrame(std::string filename, int index) const {
+  cv::VideoCapture cap(filename);
+  if (!cap.isOpened())
+    return cv::Mat();
+  cap.set(cv::CAP_PROP_POS_FRAMES, index);
+  cv::Mat frame;
+  cap >> frame;
+  return frame;
+}
+int FileIo::getFrameCount(std::string filename) const {
+  cv::VideoCapture cap(filename);
+  if (!cap.isOpened())
+    return 0;
+  return static_cast<int>(cap.get(cv::CAP_PROP_FRAME_COUNT));
+}

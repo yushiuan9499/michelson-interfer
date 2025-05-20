@@ -15,12 +15,14 @@ class MainWindow : public QWidget {
 public:
   MainWindow(QWidget *parent = nullptr);
   virtual ~MainWindow();
+  void mousePressEvent(QMouseEvent *event) override;
 
 private:
   // Buttons
   QPushButton *btnSelectVideo;
   QPushButton *btnAnalyze;
   QPushButton *btnExport;
+  QPushButton *btnSetRoiSize;
 
   // Inputs
   QDoubleSpinBox *editThresholdLow;
@@ -29,9 +31,16 @@ private:
   // Chart
   QtCharts::QChartView *chartView;
   QtCharts::QLineSeries *lineSeries;
+  QtCharts::QChart *chart;
 
   // Image display
-  QLabel *imageLabel;
+  QGraphicsView *graphicsView;
+  QGraphicsScene *graphicsScene;
+  QGraphicsPixmapItem *imageItem;
+  QGraphicsItem *roiCrossItem;
+  QGraphicsRectItem *roiRectItem;
+  QPoint roiCenter;
+  int roiSize = 20;
 
   // File I/O & Analyzer
   FileIo *fileIo;
@@ -42,8 +51,12 @@ private:
   void selectVideo();
   void analyze();
   void exportCsv();
+  void setRoiCenter(const QPoint &pt);
+  void updateRoi();
 public slots:
-  void updateResults(const cv::Mat &frame, double *meanIntesity, int size);
+  void updateResults(const cv::Mat &frame, double *meanIntesity, int startFrame,
+                     int size);
+  void showRoiSizeDialog();
 };
 
 #endif // MAIN_WINDOW_H

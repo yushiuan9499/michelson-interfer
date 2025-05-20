@@ -22,6 +22,6 @@ void Analyzer::calculateMean(const cv::Mat &frame, const bool isLastFrame) {
     // Emit the signal with the current frame and mean intensity
     int size = (results.size() - 1) % 10 + 1;
     double *meanIntesity = &this->results[results.size() - size];
-    emit updateResults(frame, meanIntesity, size);
+    emit updateResults(frame, meanIntesity, results.size() - size, size);
   }
 }
