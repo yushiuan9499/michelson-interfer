@@ -5,12 +5,21 @@
 #include <QImage>
 #include <QInputDialog>
 #include <QLabel>
+#include <QMessageBox>
 #include <QPixmap>
 #include <QVBoxLayout>
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
+
+struct AnalyzeSettings {
+  std::string fileName;
+  int thresholdLow;
+  int thresholdHigh;
+  int roiSize;
+  QPoint roiCenter;
+};
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   this->showMaximized();
@@ -23,11 +32,12 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   // Inputs
   auto *labelThresholdLow = new QLabel("閾值（低）", this);
   editThresholdLow = new QDoubleSpinBox(this);
+  editThresholdLow->setRange(0, 1000);
+  editThresholdLow->setValue(50);
   auto *labelThresholdHigh = new QLabel("閾值（高）", this);
   editThresholdHigh = new QDoubleSpinBox(this);
-  auto *labelRoiSize = new QLabel("ROI大小", this);
-  editThresholdLow->setRange(0, 1000);
   editThresholdHigh->setRange(0, 1000);
+  editThresholdHigh->setValue(200);
 
   // Chart
   lineSeries = new QtCharts::QLineSeries();
@@ -54,6 +64,10 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   roiRectItem = nullptr;
   roiCenter = QPoint(-1, -1);
 
+  // Result display
+  labelCircleChange = new QLabel("圓形變化 : N/A", this);
+  labelCircleChange->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+
   // Layouts
   auto *buttonLayout = new QHBoxLayout();
   buttonLayout->addWidget(btnSelectVideo);
@@ -68,6 +82,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   leftLayout->addWidget(editThresholdHigh);
   leftLayout->addWidget(btnSetRoiSize);
   leftLayout->addStretch();
+  leftLayout->addWidget(labelCircleChange);
 
   auto *rightLayout = new QVBoxLayout();
   rightLayout->addWidget(graphicsView);
@@ -145,17 +160,48 @@ void MainWindow::selectVideo() {
 }
 
 void MainWindow::analyze() {
+  static AnalyzeSettings prevSettings;
   if (fileName.empty()) {
+    QMessageBox::warning(this, tr("錯誤"), tr("請先選擇影片檔案"));
     return;
   }
-
-  lineSeries->clear();
+  if (roiCenter.x() < 0 || roiCenter.y() < 0) {
+    QMessageBox::warning(this, tr("錯誤"), tr("請先設定ROI"));
+    return;
+  }
   // Get threshold values
   double thresholdLow = editThresholdLow->value();
   double thresholdHigh = editThresholdHigh->value();
+  if (thresholdLow >= thresholdHigh) {
+    QMessageBox::warning(this, tr("錯誤"), tr("閾值（低）必須小於閾值（高）"));
+    return;
+  }
+  if (prevSettings.fileName == fileName && prevSettings.roiSize == roiSize &&
+      prevSettings.roiCenter == roiCenter &&
+      prevSettings.thresholdLow == thresholdLow &&
+      prevSettings.thresholdHigh == thresholdHigh) {
+    return;
+  }
+  if (prevSettings.fileName != fileName || prevSettings.roiSize != roiSize ||
+      prevSettings.roiCenter != roiCenter) {
+    // Clear previous results
+    lineSeries->clear();
+    analyzer->clearResults();
+    // Load video and start analysis
+    fileIo->readFramesAsync(fileName);
+  }
 
-  // Load video and start analysis
-  fileIo->readFramesAsync(fileName);
+  int circleChange =
+      analyzer->calculateCircleChange(thresholdLow, thresholdHigh);
+
+  labelCircleChange->setText(QString("圓形變化 : %1").arg(circleChange));
+
+  // update the prevSettings
+  prevSettings.fileName = fileName;
+  prevSettings.roiSize = roiSize;
+  prevSettings.roiCenter = roiCenter;
+  prevSettings.thresholdLow = thresholdLow;
+  prevSettings.thresholdHigh = thresholdHigh;
 }
 
 void MainWindow::exportCsv() {

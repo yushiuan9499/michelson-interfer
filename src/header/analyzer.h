@@ -17,6 +17,7 @@ public:
 
   void setBound(int left, int right, int top, int bottom);
   void clearResults();
+  int calculateCircleChange(double thresholdLow, double thresholdHigh);
 
   const std::vector<double> &getResults() const;
 

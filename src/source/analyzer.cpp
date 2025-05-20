@@ -25,3 +25,24 @@ void Analyzer::calculateMean(const cv::Mat &frame, const bool isLastFrame) {
     emit updateResults(frame, meanIntesity, results.size() - size, size);
   }
 }
+
+int Analyzer::calculateCircleChange(double thresholdLow, double thresholdHigh) {
+  /*
+   * 設定兩個閾值，當值從低於閾值變為高於閾值時，計數器加一
+   */
+  int cnt = 0;
+  bool reachThreshold = false, low;
+  for (double result : results) {
+    if (result < thresholdLow) {
+      reachThreshold = true;
+      low = true;
+    } else if (result > thresholdHigh) {
+      if (reachThreshold) {
+        cnt += low;
+      } else
+        reachThreshold = true;
+      low = false;
+    }
+  }
+  return cnt;
+}

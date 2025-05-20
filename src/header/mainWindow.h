@@ -42,6 +42,9 @@ private:
   QPoint roiCenter;
   int roiSize = 20;
 
+  // Result display
+  QLabel *labelCircleChange;
+
   // File I/O & Analyzer
   FileIo *fileIo;
   Analyzer *analyzer;
