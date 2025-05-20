@@ -10,7 +10,13 @@
 - 自動數光圈變化
 ## Dependencies
 - qt5
+  ```bash
+  sudo apt install libqt5channel5-dev qtbase5-dev qt5-qmake
+  ```
 - opencv
+  ```bash
+  sudo apt install libopencv-dev
+  ```
 ## Install
   ```bash
   # 下載Repository
