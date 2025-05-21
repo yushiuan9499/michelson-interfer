@@ -26,13 +26,15 @@ void Analyzer::calculateMean(const cv::Mat &frame, const bool isLastFrame) {
   }
 }
 
-int Analyzer::calculateCircleChange(double thresholdLow, double thresholdHigh) {
+int Analyzer::calculateCircleChange(double thresholdLow, double thresholdHigh,
+                                    int startFrame, int endFrame) {
   /*
    * 設定兩個閾值，當值從低於閾值變為高於閾值時，計數器加一
    */
   int cnt = 0;
   bool reachThreshold = false, low;
-  for (double result : results) {
+  for (int i = startFrame; i < results.size() && i != endFrame; i++) {
+    const double result = results[i];
     if (result < thresholdLow) {
       reachThreshold = true;
       low = true;

@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QLineSeries>
 #include <QPushButton>
+#include <QSlider>
 #include <QWidget>
 
 class MainWindow : public QWidget {
@@ -41,6 +42,14 @@ private:
   QGraphicsRectItem *roiRectItem;
   QPoint roiCenter;
   int roiSize = 20;
+  // Sliders
+  QSlider *frameSlider;
+  QSlider *rangeSliderMin;
+  QSlider *rangeSliderMax;
+  // Labels for sliders
+  QLabel *labelRangeMin;
+  QLabel *labelRangeMax;
+  QLabel *labelFrame;
 
   // Result display
   QLabel *labelCircleChange;
@@ -56,6 +65,7 @@ private:
   void exportCsv();
   void setRoiCenter(const QPoint &pt);
   void updateRoi();
+  void updateSlider(int min, int max, int value);
 public slots:
   void updateResults(const cv::Mat &frame, double *meanIntesity, int startFrame,
                      int size);

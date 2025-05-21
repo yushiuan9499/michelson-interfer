@@ -15,8 +15,6 @@
 
 struct AnalyzeSettings {
   std::string fileName;
-  int thresholdLow;
-  int thresholdHigh;
   int roiSize;
   QPoint roiCenter;
 };
@@ -43,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   lineSeries = new QtCharts::QLineSeries();
   chart = new QtCharts::QChart();
   chart->addSeries(lineSeries);
+  chart->legend()->hide();
   chart->createDefaultAxes();
   auto axesY = chart->axes(Qt::Vertical, lineSeries);
   if (!axesY.isEmpty()) {
@@ -63,6 +62,26 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   roiCrossItem = nullptr;
   roiRectItem = nullptr;
   roiCenter = QPoint(-1, -1);
+  // Sliders
+  frameSlider = new QSlider(Qt::Horizontal, this);
+  frameSlider->setMinimum(0);
+  frameSlider->setMaximum(0);
+  frameSlider->setTickPosition(QSlider::TicksBelow);
+
+  rangeSliderMin = new QSlider(Qt::Horizontal, this);
+  rangeSliderMin->setMinimum(0);
+  rangeSliderMin->setMaximum(0);
+
+  rangeSliderMax = new QSlider(Qt::Horizontal, this);
+  rangeSliderMax->setMinimum(0);
+  rangeSliderMax->setMaximum(0);
+  // Slider labels
+  labelRangeMin = new QLabel("分析範圍起點: 0", this);
+  labelRangeMin->setStyleSheet("font-size: 20px;");
+  labelRangeMax = new QLabel("分析範圍終點: 0", this);
+  labelRangeMax->setStyleSheet("font-size: 20px;");
+  labelFrame = new QLabel("目前影格: 0", this);
+  labelFrame->setStyleSheet("font-size: 20px;");
 
   // Result display
   labelCircleChange = new QLabel("圓形變化 : N/A", this);
@@ -86,6 +105,12 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
 
   auto *rightLayout = new QVBoxLayout();
   rightLayout->addWidget(graphicsView);
+  rightLayout->addWidget(labelRangeMin);
+  rightLayout->addWidget(rangeSliderMin);
+  rightLayout->addWidget(labelRangeMax);
+  rightLayout->addWidget(rangeSliderMax);
+  rightLayout->addWidget(labelFrame);
+  rightLayout->addWidget(frameSlider);
 
   auto *mainLayout = new QVBoxLayout(this);
   auto *topLayout = new QHBoxLayout();
@@ -94,7 +119,8 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   mainLayout->addLayout(topLayout);
 
   auto *contentLayout = new QHBoxLayout();
-  contentLayout->addWidget(chartView, 1);
+  contentLayout->addWidget(chartView, 0, Qt::AlignTop);
+  chartView->setFixedHeight(540);
   mainLayout->addLayout(contentLayout);
 
   setLayout(mainLayout);
@@ -111,6 +137,13 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   connect(btnExport, &QPushButton::clicked, this, &MainWindow::exportCsv);
   connect(btnSetRoiSize, &QPushButton::clicked, this,
           &MainWindow::showRoiSizeDialog);
+  // Connect slider signals to update labels
+  connect(rangeSliderMin, &QSlider::valueChanged, this,
+          [this](int min) { this->updateSlider(min, -1, -1); });
+  connect(rangeSliderMax, &QSlider::valueChanged, this,
+          [this](int max) { this->updateSlider(-1, max, -1); });
+  connect(frameSlider, &QSlider::valueChanged, this,
+          [this](int value) { this->updateSlider(-1, -1, value); });
 }
 
 MainWindow::~MainWindow() {}
@@ -147,7 +180,7 @@ void MainWindow::selectVideo() {
   imageItem = graphicsScene->addPixmap(QPixmap::fromImage(img));
   graphicsScene->setSceneRect(img.rect());
   if (roiCenter.x() >= 0 && roiCenter.y() >= 0)
-    setRoiCenter(roiCenter);
+    updateRoi();
   lineSeries->clear();
   int frameCount = fileIo->getFrameCount(fileName);
   // Set the range of the x-axis
@@ -157,6 +190,10 @@ void MainWindow::selectVideo() {
     if (valueAxisX)
       valueAxisX->setRange(0, frameCount);
   }
+  frameSlider->setMaximum(frameCount - 1);
+  rangeSliderMin->setMaximum(frameCount - 1);
+  rangeSliderMax->setMaximum(frameCount - 1);
+  rangeSliderMax->setValue(frameCount - 1);
 }
 
 void MainWindow::analyze() {
@@ -176,12 +213,6 @@ void MainWindow::analyze() {
     QMessageBox::warning(this, tr("錯誤"), tr("閾值（低）必須小於閾值（高）"));
     return;
   }
-  if (prevSettings.fileName == fileName && prevSettings.roiSize == roiSize &&
-      prevSettings.roiCenter == roiCenter &&
-      prevSettings.thresholdLow == thresholdLow &&
-      prevSettings.thresholdHigh == thresholdHigh) {
-    return;
-  }
   if (prevSettings.fileName != fileName || prevSettings.roiSize != roiSize ||
       prevSettings.roiCenter != roiCenter) {
     // Clear previous results
@@ -191,8 +222,9 @@ void MainWindow::analyze() {
     fileIo->readFramesAsync(fileName);
   }
 
-  int circleChange =
-      analyzer->calculateCircleChange(thresholdLow, thresholdHigh);
+  int circleChange = analyzer->calculateCircleChange(
+      thresholdLow, thresholdHigh, rangeSliderMin->value(),
+      rangeSliderMax->value());
 
   labelCircleChange->setText(QString("圓形變化 : %1").arg(circleChange));
 
@@ -200,8 +232,6 @@ void MainWindow::analyze() {
   prevSettings.fileName = fileName;
   prevSettings.roiSize = roiSize;
   prevSettings.roiCenter = roiCenter;
-  prevSettings.thresholdLow = thresholdLow;
-  prevSettings.thresholdHigh = thresholdHigh;
 }
 
 void MainWindow::exportCsv() {
@@ -269,4 +299,45 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
     }
   }
   QWidget::mousePressEvent(event);
+}
+void MainWindow::updateSlider(int min, int max, int value) {
+  if (min >= 0) {
+    if (min > rangeSliderMax->value()) {
+      rangeSliderMin->setValue(rangeSliderMax->value());
+    }
+    if (min > frameSlider->value()) {
+      frameSlider->setValue(min);
+      labelFrame->setText(QString("目前影格: %1").arg(min));
+    }
+    labelRangeMin->setText(QString("分析範圍起點: %1").arg(min));
+  }
+  if (max >= 0) {
+    if (max < rangeSliderMin->value()) {
+      rangeSliderMax->setValue(rangeSliderMin->value());
+    }
+    if (max < frameSlider->value()) {
+      frameSlider->setValue(max);
+      labelFrame->setText(QString("目前影格: %1").arg(max));
+    }
+    labelRangeMax->setText(QString("分析範圍終點: %1").arg(max));
+  }
+  if (value >= 0) {
+    if (value < rangeSliderMin->value()) {
+      value = rangeSliderMin->value();
+    }
+    if (value > rangeSliderMax->value()) {
+      value = rangeSliderMax->value();
+    }
+    frameSlider->setValue(value);
+    labelFrame->setText(QString("目前影格: %1").arg(value));
+    cv::Mat firstFrame = fileIo->getFrame(fileName, value);
+    QImage img(firstFrame.data, firstFrame.cols, firstFrame.rows,
+               firstFrame.step[0], QImage::Format_BGR888);
+    if (imageItem)
+      graphicsScene->removeItem(imageItem);
+    imageItem = graphicsScene->addPixmap(QPixmap::fromImage(img));
+    graphicsScene->setSceneRect(img.rect());
+    if (roiCenter.x() >= 0 && roiCenter.y() >= 0)
+      updateRoi();
+  }
 }
