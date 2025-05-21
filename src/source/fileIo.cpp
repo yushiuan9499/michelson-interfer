@@ -7,6 +7,11 @@
 
 FileIo::FileIo(QObject *parent) : QObject(parent) {}
 
+/*
+ * 讀取影片
+ * @param filename: 影片檔名
+ * @emit: loadFrame(cv::Mat, int): 讓anaylzer分析影片
+ */
 void FileIo::readFramesAsync(const std::string &filename) {
   QtConcurrent::run([this, filename]() {
     cv::VideoCapture cap(filename);
@@ -24,6 +29,12 @@ void FileIo::readFramesAsync(const std::string &filename) {
   });
 }
 
+/*
+ * 寫入CSV檔案
+ * @param filename: CSV檔名
+ * @param data: 寫入的資料
+ * @return: 寫入的資料筆數
+ */
 int FileIo::writeCsv(const std::string &filename,
                      const std::vector<double> &data) {
   int count = data.size();
@@ -34,6 +45,12 @@ int FileIo::writeCsv(const std::string &filename,
   return count;
 }
 
+/*
+ * 取得特定幀
+ * @param filename: 影片檔名
+ * @param index: 幀數編號，0-indexed
+ * @return: 取得的幀
+ */
 cv::Mat FileIo::getFrame(std::string filename, int index) const {
   cv::VideoCapture cap(filename);
   if (!cap.isOpened())
@@ -43,6 +60,11 @@ cv::Mat FileIo::getFrame(std::string filename, int index) const {
   cap >> frame;
   return frame;
 }
+/*
+ * 取得影片幀數
+ * @param filename: 影片檔名
+ * @return: 影片幀數
+ */
 int FileIo::getFrameCount(std::string filename) const {
   cv::VideoCapture cap(filename);
   if (!cap.isOpened())
