@@ -10,19 +10,23 @@
 ## Dependencies
 - qt5
   ```bash
-  sudo apt install libqt5charts5-dev qtbase5-dev qt5-qmake
+  sudo apt install libqt5channel5-dev libqt5charts5-dev qtbase5-dev qt5-qmake 
   ```
 - opencv
   ```bash
   sudo apt install libopencv-dev
   ```
 ## Install
+  下載Repository  
   ```bash
-  # 下載Repository
   git clone git@github.com:yushiuan9499/michelson-interfer.git
-  # 移動到資料夾
+  ```
+  移動到資料夾
+  ```bash
   cd michelson-interfer/src
-  # 編譯
+  ```
+  編譯
+  ```bash
   qmake && make
   ```
 ## Usage
