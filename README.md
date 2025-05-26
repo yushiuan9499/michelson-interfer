@@ -10,7 +10,7 @@
 ## Dependencies
 - qt5
   ```bash
-  sudo apt install libqt5channel5-dev qtbase5-dev qt5-qmake
+  sudo apt install libqt5charts5-dev qtbase5-dev qt5-qmake
   ```
 - opencv
   ```bash
