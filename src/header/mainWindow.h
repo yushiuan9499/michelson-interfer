@@ -46,10 +46,10 @@ private:
   QSlider *frameSlider;
   QSlider *rangeSliderMin;
   QSlider *rangeSliderMax;
-  // Labels for sliders
-  QLabel *labelRangeMin;
-  QLabel *labelRangeMax;
-  QLabel *labelFrame;
+  // SpinBox for frame selection
+  QSpinBox *spinRangeMin;
+  QSpinBox *spinRangeMax;
+  QSpinBox *spinFrame;
 
   // Result display
   QLabel *labelCircleChange;

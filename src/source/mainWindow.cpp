@@ -1,4 +1,5 @@
 #include "mainWindow.h"
+#include "qlabel.h"
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QImage>
@@ -84,12 +85,28 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   rangeSliderMax->setMinimum(0);
   rangeSliderMax->setMaximum(0);
   // Slider labels
-  labelRangeMin = new QLabel("分析範圍起點: 0", this);
+  QLabel *labelRangeMin = new QLabel("分析範圍起點:", this);
   labelRangeMin->setStyleSheet("font-size: 20px;");
-  labelRangeMax = new QLabel("分析範圍終點: 0", this);
+  QLabel *labelRangeMax = new QLabel("分析範圍終點:", this);
   labelRangeMax->setStyleSheet("font-size: 20px;");
-  labelFrame = new QLabel("目前影格: 0", this);
+  QLabel *labelFrame = new QLabel("目前影格:", this);
   labelFrame->setStyleSheet("font-size: 20px;");
+  // SpinBox for frame selection
+  spinRangeMin = new QSpinBox(this);
+  spinRangeMin->setMinimum(0);
+  spinRangeMin->setMaximum(0);
+  spinRangeMin->setValue(0);
+  spinRangeMin->setStyleSheet("font-size: 20px;");
+  spinRangeMax = new QSpinBox(this);
+  spinRangeMax->setMinimum(0);
+  spinRangeMax->setMaximum(0);
+  spinRangeMax->setValue(0);
+  spinRangeMax->setStyleSheet("font-size: 20px;");
+  spinFrame = new QSpinBox(this);
+  spinFrame->setMinimum(0);
+  spinFrame->setMaximum(0);
+  spinFrame->setValue(0);
+  spinFrame->setStyleSheet("font-size: 20px;");
 
   // Result display
   labelCircleChange = new QLabel("圓形變化 : N/A", this);
@@ -112,13 +129,26 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   leftLayout->addStretch();
   leftLayout->addWidget(labelCircleChange);
 
+  auto rangeMinLayout = new QHBoxLayout();
+  rangeMinLayout->addWidget(labelRangeMin);
+  rangeMinLayout->addWidget(spinRangeMin);
+  rangeMinLayout->addStretch(1);
+  auto rangeMaxLayout = new QHBoxLayout();
+  rangeMaxLayout->addWidget(labelRangeMax);
+  rangeMaxLayout->addWidget(spinRangeMax);
+  rangeMaxLayout->addStretch(1);
+  auto frameLayout = new QHBoxLayout();
+  frameLayout->addWidget(labelFrame);
+  frameLayout->addWidget(spinFrame);
+  frameLayout->addStretch(1);
+
   auto *rightLayout = new QVBoxLayout();
   rightLayout->addWidget(graphicsView);
-  rightLayout->addWidget(labelRangeMin);
+  rightLayout->addLayout(rangeMinLayout);
   rightLayout->addWidget(rangeSliderMin);
-  rightLayout->addWidget(labelRangeMax);
+  rightLayout->addLayout(rangeMaxLayout);
   rightLayout->addWidget(rangeSliderMax);
-  rightLayout->addWidget(labelFrame);
+  rightLayout->addLayout(frameLayout);
   rightLayout->addWidget(frameSlider);
   // 使用 QSplitter 讓 leftLayout 和 rightLayout 可調整大小
   auto *topSplitter = new QSplitter(Qt::Horizontal, this);
@@ -171,9 +201,15 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   // Connect slider signals to update labels
   connect(rangeSliderMin, &QSlider::valueChanged, this,
           [this](int min) { this->updateSlider(min, -1, -1); });
+  connect(spinRangeMin, QOverload<int>::of(&QSpinBox::valueChanged), this,
+          [this](int min) { this->updateSlider(min, -1, -1); });
   connect(rangeSliderMax, &QSlider::valueChanged, this,
           [this](int max) { this->updateSlider(-1, max, -1); });
+  connect(spinRangeMax, QOverload<int>::of(&QSpinBox::valueChanged), this,
+          [this](int max) { this->updateSlider(-1, max, -1); });
   connect(frameSlider, &QSlider::valueChanged, this,
+          [this](int value) { this->updateSlider(-1, -1, value); });
+  connect(spinFrame, QOverload<int>::of(&QSpinBox::valueChanged), this,
           [this](int value) { this->updateSlider(-1, -1, value); });
 }
 
@@ -236,6 +272,10 @@ void MainWindow::selectVideo() {
   frameSlider->setMaximum(frameCount - 1);
   rangeSliderMin->setMaximum(frameCount - 1);
   rangeSliderMax->setMaximum(frameCount - 1);
+  spinRangeMin->setMaximum(frameCount - 1);
+  spinRangeMax->setMaximum(frameCount - 1);
+  spinRangeMax->setValue(frameCount - 1);
+  spinFrame->setMaximum(frameCount - 1);
   rangeSliderMax->setValue(frameCount - 1);
 }
 
@@ -377,9 +417,10 @@ void MainWindow::updateSlider(int min, int max, int value) {
     }
     if (min > frameSlider->value()) {
       frameSlider->setValue(min);
-      labelFrame->setText(QString("目前影格: %1").arg(min));
+      spinFrame->setValue(min);
     }
-    labelRangeMin->setText(QString("分析範圍起點: %1").arg(min));
+    rangeSliderMin->setValue(min);
+    spinRangeMin->setValue(min);
   }
   if (max >= 0) {
     if (max < rangeSliderMin->value()) {
@@ -387,9 +428,10 @@ void MainWindow::updateSlider(int min, int max, int value) {
     }
     if (max < frameSlider->value()) {
       frameSlider->setValue(max);
-      labelFrame->setText(QString("目前影格: %1").arg(max));
+      spinFrame->setValue(max);
     }
-    labelRangeMax->setText(QString("分析範圍終點: %1").arg(max));
+    rangeSliderMax->setValue(max);
+    spinRangeMax->setValue(max);
   }
   if (value >= 0) {
     if (value < rangeSliderMin->value()) {
@@ -399,7 +441,7 @@ void MainWindow::updateSlider(int min, int max, int value) {
       value = rangeSliderMax->value();
     }
     frameSlider->setValue(value);
-    labelFrame->setText(QString("目前影格: %1").arg(value));
+    spinFrame->setValue(value);
     cv::Mat firstFrame = fileIo->getFrame(fileName, value);
     QImage img(firstFrame.data, firstFrame.cols, firstFrame.rows,
                firstFrame.step[0], QImage::Format_BGR888);
