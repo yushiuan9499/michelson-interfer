@@ -1,5 +1,4 @@
 #include "mainWindow.h"
-#include "qnamespace.h"
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QImage>
@@ -7,11 +6,14 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QPixmap>
+#include <QSplitter>
+#include <QTimer>
 #include <QVBoxLayout>
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
+#include <iostream>
 
 /*
  * 紀錄上一次分析的設定，避免重複分析
@@ -118,19 +120,40 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   rightLayout->addWidget(rangeSliderMax);
   rightLayout->addWidget(labelFrame);
   rightLayout->addWidget(frameSlider);
+  // 使用 QSplitter 讓 leftLayout 和 rightLayout 可調整大小
+  auto *topSplitter = new QSplitter(Qt::Horizontal, this);
+  auto *leftWidget = new QWidget(this);
+  leftWidget->setLayout(leftLayout);
+  auto *rightWidget = new QWidget(this);
+  rightWidget->setLayout(rightLayout);
+  topSplitter->addWidget(leftWidget);
+  topSplitter->addWidget(rightWidget);
+  topSplitter->setStyleSheet("QSplitter::handle { background: #888; border: "
+                             "1px solid #444; width: 4px; }");
 
   auto *mainLayout = new QVBoxLayout(this);
-  auto *topLayout = new QHBoxLayout();
-  topLayout->addLayout(leftLayout);
-  topLayout->addLayout(rightLayout);
-  mainLayout->addLayout(topLayout);
+  mainLayout->addWidget(topSplitter);
 
-  auto *contentLayout = new QHBoxLayout();
-  contentLayout->addWidget(chartView, 0, Qt::AlignTop);
-  chartView->setFixedHeight(540);
-  mainLayout->addLayout(contentLayout);
+  auto *splitter = new QSplitter(Qt::Vertical, this);
+  splitter->addWidget(topSplitter);
+  splitter->addWidget(chartView);
+  chartView->setFixedHeight(540); // 可視需求移除這行，讓高度可調
+  mainLayout->addWidget(splitter);
 
   setLayout(mainLayout);
+  // 延後執行時間，以獲得正確的視窗大小
+  QTimer::singleShot(100, this, [this, topSplitter, splitter]() {
+    // 設定 splitter 的預設比例
+    int totalWidth = this->width();
+    int left = totalWidth * 1 / 6;
+    int right = totalWidth * 5 / 6;
+    topSplitter->setSizes({left, right});
+    // 設定 bottomSplitter 的預設比例
+    int totalHeight = height();
+    int top = totalHeight * 4 / 5;
+    int bottom = totalHeight * 1 / 5;
+    splitter->setSizes({top, bottom});
+  });
 
   qRegisterMetaType<cv::Mat>("cv::Mat");
   // File I/O & Analyzer
