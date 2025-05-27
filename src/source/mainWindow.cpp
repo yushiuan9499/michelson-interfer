@@ -414,24 +414,28 @@ void MainWindow::updateSlider(int min, int max, int value) {
   if (min >= 0) {
     if (min > rangeSliderMax->value()) {
       rangeSliderMin->setValue(rangeSliderMax->value());
+      spinRangeMin->setValue(rangeSliderMax->value());
+    } else {
+      rangeSliderMin->setValue(min);
+      spinRangeMin->setValue(min);
     }
     if (min > frameSlider->value()) {
       frameSlider->setValue(min);
       spinFrame->setValue(min);
     }
-    rangeSliderMin->setValue(min);
-    spinRangeMin->setValue(min);
   }
   if (max >= 0) {
     if (max < rangeSliderMin->value()) {
       rangeSliderMax->setValue(rangeSliderMin->value());
+      spinRangeMax->setValue(rangeSliderMin->value());
+    } else {
+      rangeSliderMax->setValue(max);
+      spinRangeMax->setValue(max);
     }
     if (max < frameSlider->value()) {
       frameSlider->setValue(max);
       spinFrame->setValue(max);
     }
-    rangeSliderMax->setValue(max);
-    spinRangeMax->setValue(max);
   }
   if (value >= 0) {
     if (value < rangeSliderMin->value()) {
