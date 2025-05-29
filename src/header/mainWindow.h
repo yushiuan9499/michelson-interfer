@@ -40,8 +40,6 @@ private:
   QGraphicsPixmapItem *imageItem;
   QGraphicsItem *roiCrossItem;
   QGraphicsRectItem *roiRectItem;
-  QPoint roiCenter;
-  int roiSize = 20;
   // Sliders
   QSlider *frameSlider;
   QSlider *rangeSliderMin;

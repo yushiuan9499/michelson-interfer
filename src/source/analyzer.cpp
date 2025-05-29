@@ -1,17 +1,29 @@
 #include "analyzer.h"
 #include <opencv2/ximgproc.hpp>
 
-Analyzer::Analyzer(QObject *parent) : QObject(parent) {}
+Analyzer::Analyzer(QObject *parent)
+    : QObject(parent), roi(new cv::Rect{-1, -1, 20, 20}) {}
 
 /*
- * 設定ROI區域
- * @param left: ROI左上角x座標
- * @param right: ROI右下角x座標
- * @param top: ROI左上角y座標
- * @param bottom: ROI右下角y座標
+ * 設定ROI中心
+ * @param x: ROI中央x座標
+ * @param y: ROI中央y座標
  */
-void Analyzer::setBound(int left, int right, int top, int bottom) {
-  this->roi = new cv::Rect(left, top, right - left, bottom - top);
+void Analyzer::setRoiCenter(int x, int y) {
+  roi->x = x - roi->width / 2;
+  roi->y = y - roi->height / 2;
+}
+/*
+ * 設定ROI大小
+ * @param size: ROI方形的邊長
+ */
+void Analyzer::setRoiSize(int size) {
+  if (size <= 0) {
+    size = 20; // Default size if invalid
+  }
+  // Update the existing ROI rectangle size
+  roi->width = size;
+  roi->height = size;
 }
 /*
  * 清空資料
@@ -77,4 +89,16 @@ int Analyzer::calculateCircleChange(double thresholdLow, double thresholdHigh,
     }
   }
   return cnt;
+}
+
+int Analyzer::getRoiSize() const {
+  return roi->width; // Return -1 if ROI is not set
+}
+const std::pair<int, int> &Analyzer::getRoiCenter() const {
+  static std::pair<int, int> center(-1, -1);
+  if (roi && roi->width > 0 && roi->height > 0) {
+    center.first = roi->x + roi->width / 2;
+    center.second = roi->y + roi->height / 2;
+  }
+  return center;
 }

@@ -25,7 +25,7 @@
 struct AnalyzeSettings {
   std::string fileName;
   int roiSize;
-  QPoint roiCenter;
+  std::pair<int, int> roiCenter;
 };
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
@@ -70,7 +70,6 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
   imageItem = nullptr;
   roiCrossItem = nullptr;
   roiRectItem = nullptr;
-  roiCenter = QPoint(-1, -1);
   // Sliders
   frameSlider = new QSlider(Qt::Horizontal, this);
   frameSlider->setMinimum(0);
@@ -234,8 +233,7 @@ void MainWindow::updateResults(const cv::Mat &frame, double *meanIntesity,
   imageItem = graphicsScene->addPixmap(QPixmap::fromImage(img));
   graphicsScene->setSceneRect(img.rect());
   // 若有 ROI，重畫標記
-  if (roiCenter.x() >= 0 && roiCenter.y() >= 0)
-    setRoiCenter(roiCenter);
+  updateRoi();
 }
 
 /*
@@ -257,8 +255,7 @@ void MainWindow::selectVideo() {
     graphicsScene->removeItem(imageItem);
   imageItem = graphicsScene->addPixmap(QPixmap::fromImage(img));
   graphicsScene->setSceneRect(img.rect());
-  if (roiCenter.x() >= 0 && roiCenter.y() >= 0)
-    updateRoi();
+  updateRoi();
   // Clear the chart and set the range of the x-axis
   lineSeries->clear();
   int frameCount = fileIo->getFrameCount(fileName);
@@ -290,7 +287,7 @@ void MainWindow::analyze() {
     QMessageBox::warning(this, tr("錯誤"), tr("請先選擇影片檔案"));
     return;
   }
-  if (roiCenter.x() < 0 || roiCenter.y() < 0) {
+  if (analyzer->getRoiCenter().first <= 0) {
     QMessageBox::warning(this, tr("錯誤"), tr("請先設定ROI"));
     return;
   }
@@ -303,8 +300,9 @@ void MainWindow::analyze() {
     return;
   }
   // If the settings not changed, do not re-analyze
-  if (prevSettings.fileName != fileName || prevSettings.roiSize != roiSize ||
-      prevSettings.roiCenter != roiCenter) {
+  if (prevSettings.fileName != fileName ||
+      prevSettings.roiSize != analyzer->getRoiSize() ||
+      prevSettings.roiCenter != analyzer->getRoiCenter()) {
     // Clear previous results
     lineSeries->clear();
     analyzer->clearResults();
@@ -320,8 +318,8 @@ void MainWindow::analyze() {
 
   // update the prevSettings
   prevSettings.fileName = fileName;
-  prevSettings.roiSize = roiSize;
-  prevSettings.roiCenter = roiCenter;
+  prevSettings.roiSize = analyzer->getRoiSize();
+  prevSettings.roiCenter = analyzer->getRoiCenter();
 }
 
 /*
@@ -350,39 +348,42 @@ void MainWindow::updateRoi() {
     delete roiRectItem;
     roiRectItem = nullptr;
   }
+  if (analyzer->getRoiSize() <= 0) {
+    return;
+  }
   // 畫紅色 X
   QPainterPath crossPath;
-  crossPath.moveTo(roiCenter.x() - 10, roiCenter.y() - 10);
-  crossPath.lineTo(roiCenter.x() + 10, roiCenter.y() + 10);
-  crossPath.moveTo(roiCenter.x() - 10, roiCenter.y() + 10);
-  crossPath.lineTo(roiCenter.x() + 10, roiCenter.y() - 10);
+  std::pair<int, int> roiCenter = analyzer->getRoiCenter();
+  crossPath.moveTo(roiCenter.first - 10, roiCenter.second - 10);
+  crossPath.lineTo(roiCenter.first + 10, roiCenter.second + 10);
+  crossPath.moveTo(roiCenter.first - 10, roiCenter.second + 10);
+  crossPath.lineTo(roiCenter.first + 10, roiCenter.second - 10);
   roiCrossItem = graphicsScene->addPath(crossPath, QPen(Qt::red, 2));
   // 畫紅色矩形
-  roiRectItem = graphicsScene->addRect(QRectF(roiCenter.x() - roiSize / 2,
-                                              roiCenter.y() - roiSize / 2,
-                                              roiSize, roiSize),
-                                       QPen(Qt::red, 2), QBrush(Qt::NoBrush));
-  // 設定 ROI 的範圍
-  analyzer->setBound(roiCenter.x() - roiSize / 2, roiCenter.x() + roiSize / 2,
-                     roiCenter.y() - roiSize / 2, roiCenter.y() + roiSize / 2);
+  roiRectItem = graphicsScene->addRect(
+      QRectF(roiCenter.first - analyzer->getRoiSize() / 2,
+             roiCenter.second - analyzer->getRoiSize() / 2,
+             analyzer->getRoiSize(), analyzer->getRoiSize()),
+      QPen(Qt::red, 2), QBrush(Qt::NoBrush));
 }
 /*
  * 設定 ROI 位置
  * @param pt: ROI 中心點座標
  */
 void MainWindow::setRoiCenter(const QPoint &pt) {
-  roiCenter = pt;
+  analyzer->setRoiCenter(pt.x(), pt.y());
   updateRoi();
 }
 /*
  * 顯示 ROI 大小設定對話框
  */
 void MainWindow::showRoiSizeDialog() {
+  int roiSize = analyzer->getRoiSize();
   bool ok = false;
   int value = QInputDialog::getInt(
       this, tr("設定ROI大小"), tr("請輸入ROI邊長："), roiSize, 1, 1000, 1, &ok);
   if (ok) {
-    roiSize = value;
+    analyzer->setRoiSize(value);
     updateRoi();
   }
 }
@@ -453,7 +454,6 @@ void MainWindow::updateSlider(int min, int max, int value) {
       graphicsScene->removeItem(imageItem);
     imageItem = graphicsScene->addPixmap(QPixmap::fromImage(img));
     graphicsScene->setSceneRect(img.rect());
-    if (roiCenter.x() >= 0 && roiCenter.y() >= 0)
-      updateRoi();
+    updateRoi();
   }
 }

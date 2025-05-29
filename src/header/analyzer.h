@@ -15,12 +15,15 @@ protected:
 public:
   explicit Analyzer(QObject *parent = nullptr);
 
-  void setBound(int left, int right, int top, int bottom);
+  void setRoiCenter(int x, int y);
+  void setRoiSize(int size);
   void clearResults();
   int calculateCircleChange(double thresholdLow, double thresholdHigh,
                             int startFrame = 0, int endFrame = -1);
 
   const std::vector<double> &getResults() const;
+  int getRoiSize() const;
+  const std::pair<int, int> &getRoiCenter() const;
 
 public slots:
   void calculateMean(const cv::Mat &frame, const bool isLastFrame);
