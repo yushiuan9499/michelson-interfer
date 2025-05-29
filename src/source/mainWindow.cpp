@@ -247,8 +247,9 @@ void MainWindow::selectVideo() {
   if (fileName.empty()) {
     return;
   }
+  fileIo->openVideo(fileName);
   // set the image label to the first frame
-  cv::Mat firstFrame = fileIo->getFrame(fileName, 0);
+  cv::Mat firstFrame = fileIo->getFrame(0);
   QImage img(firstFrame.data, firstFrame.cols, firstFrame.rows,
              firstFrame.step[0], QImage::Format_BGR888);
   if (imageItem)
@@ -258,7 +259,7 @@ void MainWindow::selectVideo() {
   updateRoi();
   // Clear the chart and set the range of the x-axis
   lineSeries->clear();
-  int frameCount = fileIo->getFrameCount(fileName);
+  int frameCount = fileIo->getFrameCount();
   auto axesX = chart->axes(Qt::Horizontal, lineSeries);
   if (!axesX.isEmpty()) {
     auto *valueAxisX = qobject_cast<QtCharts::QValueAxis *>(axesX.first());
@@ -307,7 +308,7 @@ void MainWindow::analyze() {
     lineSeries->clear();
     analyzer->clearResults();
     // Load video and start analysis
-    fileIo->readFramesAsync(fileName);
+    fileIo->readFramesAsync();
   }
 
   int circleChange = analyzer->calculateCircleChange(
@@ -348,7 +349,7 @@ void MainWindow::updateRoi() {
     delete roiRectItem;
     roiRectItem = nullptr;
   }
-  if (analyzer->getRoiSize() <= 0) {
+  if (analyzer->getRoiCenter().first <= 0) {
     return;
   }
   // 畫紅色 X
@@ -447,7 +448,7 @@ void MainWindow::updateSlider(int min, int max, int value) {
     }
     frameSlider->setValue(value);
     spinFrame->setValue(value);
-    cv::Mat firstFrame = fileIo->getFrame(fileName, value);
+    cv::Mat firstFrame = fileIo->getFrame(value);
     QImage img(firstFrame.data, firstFrame.cols, firstFrame.rows,
                firstFrame.step[0], QImage::Format_BGR888);
     if (imageItem)

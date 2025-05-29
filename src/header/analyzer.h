@@ -23,7 +23,7 @@ public:
 
   const std::vector<double> &getResults() const;
   int getRoiSize() const;
-  const std::pair<int, int> &getRoiCenter() const;
+  const std::pair<int, int> getRoiCenter() const;
 
 public slots:
   void calculateMean(const cv::Mat &frame, const bool isLastFrame);

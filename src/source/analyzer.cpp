@@ -94,11 +94,14 @@ int Analyzer::calculateCircleChange(double thresholdLow, double thresholdHigh,
 int Analyzer::getRoiSize() const {
   return roi->width; // Return -1 if ROI is not set
 }
-const std::pair<int, int> &Analyzer::getRoiCenter() const {
+const std::pair<int, int> Analyzer::getRoiCenter() const {
   static std::pair<int, int> center(-1, -1);
-  if (roi && roi->width > 0 && roi->height > 0) {
+  if (roi && roi->x > 0 && roi->y > 0) {
     center.first = roi->x + roi->width / 2;
     center.second = roi->y + roi->height / 2;
+  } else {
+    center.first = -1;
+    center.second = -1; // Invalid center if ROI is not set
   }
   return center;
 }

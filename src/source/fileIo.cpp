@@ -3,28 +3,31 @@
 #include <QThread>
 #include <QtConcurrent/QtConcurrent>
 #include <fstream>
-#include <opencv2/opencv.hpp>
 
 FileIo::FileIo(QObject *parent) : QObject(parent) {}
 
 /*
  * 讀取影片
- * @param filename: 影片檔名
- * @emit: loadFrame(cv::Mat, int): 讓anaylzer分析影片
  */
-void FileIo::readFramesAsync(const std::string &filename) {
-  QtConcurrent::run([this, filename]() {
-    cv::VideoCapture cap(filename);
+void FileIo::readFramesAsync() {
+  cap.set(cv::CAP_PROP_POS_FRAMES, 0);
+  QtConcurrent::run([this]() {
     if (!cap.isOpened())
       return;
     cv::Mat frame;
+    const int preAllocRows =
+        static_cast<int>(cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    const int preAllocCols =
+        static_cast<int>(cap.get(cv::CAP_PROP_FRAME_WIDTH));
+    const int preAllocType = CV_8UC3; // 假設為彩色影像
+    frame.create(preAllocRows, preAllocCols, preAllocType);
     while (cap.read(frame)) {
       if (frame.empty())
         break;
       bool isLastFrame = (cap.get(cv::CAP_PROP_POS_FRAMES) ==
                           cap.get(cv::CAP_PROP_FRAME_COUNT));
       emit loadFrame(frame.clone(), isLastFrame ? 1 : 0);
-      QThread::msleep(10); // simulate processing delay
+      QThread::msleep(3); // simulate processing delay
     }
   });
 }
@@ -47,12 +50,10 @@ int FileIo::writeCsv(const std::string &filename,
 
 /*
  * 取得特定幀
- * @param filename: 影片檔名
  * @param index: 幀數編號，0-indexed
  * @return: 取得的幀
  */
-cv::Mat FileIo::getFrame(std::string filename, int index) const {
-  cv::VideoCapture cap(filename);
+cv::Mat FileIo::getFrame(int index) {
   if (!cap.isOpened())
     return cv::Mat();
   cap.set(cv::CAP_PROP_POS_FRAMES, index);
@@ -62,12 +63,23 @@ cv::Mat FileIo::getFrame(std::string filename, int index) const {
 }
 /*
  * 取得影片幀數
- * @param filename: 影片檔名
  * @return: 影片幀數
  */
-int FileIo::getFrameCount(std::string filename) const {
-  cv::VideoCapture cap(filename);
+int FileIo::getFrameCount() const {
   if (!cap.isOpened())
     return 0;
   return static_cast<int>(cap.get(cv::CAP_PROP_FRAME_COUNT));
+}
+/*
+ * 開啟影片檔案
+ * @param filename: 影片檔名
+ */
+void FileIo::openVideo(const std::string &filename) {
+  if (cap.isOpened()) {
+    cap.release();
+  }
+  cap.open(filename);
+  if (!cap.isOpened()) {
+    throw std::runtime_error("Cannot open video file: " + filename);
+  }
 }
