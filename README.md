@@ -21,9 +21,9 @@
   # 下載Repository
   git clone git@github.com:yushiuan9499/michelson-interfer.git
   # 移動到資料夾
-  cd michelson-interfer/src
+  cd michelson-interfer
   # 編譯
-  qmake && make
+  ./tools/build.sh
   ```
 ## Usage
 1. 執行檔案

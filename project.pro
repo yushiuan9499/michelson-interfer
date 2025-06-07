@@ -6,10 +6,11 @@ TEMPLATE = app
 TARGET = main
 INCLUDEPATH += .
 QT += core gui widgets charts
-OBJECTS_DIR = ../build/
+OBJECTS_DIR = ../build/obj
+MOC_DIR = ../build/moc
 DESTDIR = ../bin/
-INCPATH += ./header /usr/include/opencv4
-LIBS += -L./header -L/usr/include/opencv4 -lopencv_core -lopencv_videoio -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs
+INCPATH += ../src/header /usr/include/opencv4
+LIBS += -L/usr/include/opencv4 -lopencv_core -lopencv_videoio -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs
 
 # You can make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -19,5 +20,5 @@ LIBS += -L./header -L/usr/include/opencv4 -lopencv_core -lopencv_videoio -lopenc
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 # Input
-HEADERS += header/*.h
-SOURCES += main.cpp source/*.cpp
+HEADERS += ../src/header/*.h
+SOURCES += ../src/main.cpp ../src/source/*.cpp

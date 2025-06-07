@@ -4,4 +4,4 @@ Makefile
 bin/
 build/
 compile_commands.json
-src/.cache/
+.cache/
