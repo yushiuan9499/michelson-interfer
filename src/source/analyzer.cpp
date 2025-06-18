@@ -1,5 +1,4 @@
 #include "analyzer.h"
-#include <opencv2/ximgproc.hpp>
 
 Analyzer::Analyzer(QObject *parent)
     : QObject(parent), roi(new cv::Rect{-1, -1, 20, 20}) {}

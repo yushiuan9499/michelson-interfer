@@ -1,0 +1,90 @@
+name: "CI: Build Test"
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  QT_VERSION: 5.15.2
+
+jobs:
+  build:
+    name: "${{ matrix.config.os }}"
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - os: windows-latest
+            arch: x64
+            platform: x64
+            binary: main.exe
+            ecm-path: "C:/Program Files/ECM/"
+          - os: ubuntu-latest
+            binary: main
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Qt environment
+        uses: jurplel/install-qt-action@v3
+        with:
+          cache: true
+          version: ${{ env.QT_VERSION }}
+          modules: 'qtcharts'
+
+      - name: "[Unix] Install Dependencies"
+        if: startsWith(matrix.config.os, 'ubuntu')
+        run: |
+          sudo apt-get update 
+          sudo apt-get install -y libopencv-dev
+
+      - name: "[Unix] Build"
+        if: startsWith(matrix.config.os, 'ubuntu') || startsWith(matrix.config.os, 'macos')
+        run: |
+          ./tools/build.sh
+          mkdir build/out
+          cp bin/${{ matrix.config.binary }} build/out
+
+      - name: "[Windows] Install Dependencies"
+        if: startsWith(matrix.config.os, 'windows')
+        run: |
+          choco install opencv
+
+      - name: "[Windows] Setup MSVC env"
+        uses: microsoft/setup-msbuild@v1.3.1
+        if: startsWith(matrix.config.os, 'windows')
+
+      - name: "[Windows] Set up Visual Studio shell"
+        if: startsWith(matrix.config.os, 'windows')
+        uses: egor-tensin/vs-shell@v2
+        with:
+          arch: x64
+
+      - name: "[Windows] Build"
+        if: startsWith(matrix.config.os, 'windows')
+        shell: cmd
+        run: |
+          set "OpenCV_DIR=C:\tools\opencv"
+          set "OpenCV_INCLUDE=%OpenCV_DIR%\build\include"
+          set "OpenCV_LIB=%OpenCV_DIR%\build\x64\vc16\lib"
+          set "INCLUDE=%OpenCV_INCLUDE%;%INCLUDE%"
+          set "LIB=%OpenCV_LIB%;%LIB%"
+
+          mkdir build bin
+          cd build
+          mkdir obj moc out
+
+          qmake ../windows.pro
+          nmake
+
+          cd ..
+          cp bin/${{ matrix.config.binary }} build/out/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "michelsonInterfer-${{ matrix.config.os }}-${{ github.run_id }}"
+          path: build/out
