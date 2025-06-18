@@ -58,15 +58,53 @@ private:
 
   std::string fileName;
 
+  /**
+   * 選擇影片檔案
+   */
   void selectVideo();
+
+  /**
+   * 分析影片
+   */
   void analyze();
+
+  /**
+   * 匯出結果
+   */
   void exportCsv();
+
+  /**
+   * 設定 ROI 位置
+   * @param pt: ROI 中心點座標
+   */
   void setRoiCenter(const QPoint &pt);
+
+  /**
+   * 更新 ROI 標記
+   */
   void updateRoi();
+
+  /**
+   * 更新滑桿的值
+   * @param min: 最小值, -1表示不更新
+   * @param max: 最大值, -1表示不更新
+   * @param value: 當前值, -1表示不更新
+   */
   void updateSlider(int min, int max, int value);
 public slots:
+  /**
+   * 更新圖表和圖片
+   * @param frame: 當前幀
+   * @param meanIntesity: 平均強度值的陣列
+   * @param startFrame: 開始幀
+   * @param size: 平均強度陣列的大小
+   */
   void updateResults(const cv::Mat &frame, double *meanIntesity, int startFrame,
                      int size);
+
+  /**
+   * 顯示 ROI 大小設定對話框
+   */
   void showRoiSizeDialog();
 };
 

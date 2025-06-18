@@ -214,13 +214,6 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
 
 MainWindow::~MainWindow() {}
 
-/*
- * 更新圖表和圖片
- * @param frame: 當前幀
- * @param meanIntesity: 平均強度值的陣列
- * @param startFrame: 開始幀
- * @param size: 平均強度陣列的大小
- */
 void MainWindow::updateResults(const cv::Mat &frame, double *meanIntesity,
                                int startFrame, int size) {
   for (int i = 0; i < size; i++) {
@@ -236,9 +229,6 @@ void MainWindow::updateResults(const cv::Mat &frame, double *meanIntesity,
   updateRoi();
 }
 
-/*
- * 選擇影片檔案
- */
 void MainWindow::selectVideo() {
   // 開啟檔案選擇對話框
   this->fileName = QFileDialog::getOpenFileName(this, tr("選擇影片"), "",
@@ -277,9 +267,6 @@ void MainWindow::selectVideo() {
   rangeSliderMax->setValue(frameCount - 1);
 }
 
-/*
- * 分析影片
- */
 void MainWindow::analyze() {
   // 上一次的設定
   static AnalyzeSettings prevSettings;
@@ -323,20 +310,15 @@ void MainWindow::analyze() {
   prevSettings.roiCenter = analyzer->getRoiCenter();
 }
 
-/*
- * 匯出結果
- */
 void MainWindow::exportCsv() {
   // Export the results to a CSV file
   QString fileName = QFileDialog::getSaveFileName(this, tr("匯出結果"), "",
                                                   tr("CSV檔案 (*.csv)"));
   if (!fileName.isEmpty()) {
-    fileIo->writeCsv(fileName.toStdString(), this->analyzer->getResults());
+    writeCsv(fileName.toStdString(), this->analyzer->getResults());
   }
 }
-/*
- * 更新 ROI 標記
- */
+
 void MainWindow::updateRoi() {
   // 移除舊的 ROI 標記
   if (roiCrossItem) {
@@ -367,17 +349,12 @@ void MainWindow::updateRoi() {
              analyzer->getRoiSize(), analyzer->getRoiSize()),
       QPen(Qt::red, 2), QBrush(Qt::NoBrush));
 }
-/*
- * 設定 ROI 位置
- * @param pt: ROI 中心點座標
- */
+
 void MainWindow::setRoiCenter(const QPoint &pt) {
   analyzer->setRoiCenter(pt.x(), pt.y());
   updateRoi();
 }
-/*
- * 顯示 ROI 大小設定對話框
- */
+
 void MainWindow::showRoiSizeDialog() {
   int roiSize = analyzer->getRoiSize();
   bool ok = false;
@@ -406,12 +383,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
   }
   QWidget::mousePressEvent(event);
 }
-/*
- * 更新滑桿的值
- * @param min: 最小值, -1表示不更新
- * @param max: 最大值, -1表示不更新
- * @param value: 當前值, -1表示不更新
- */
+
 void MainWindow::updateSlider(int min, int max, int value) {
   if (min >= 0) {
     if (min > rangeSliderMax->value()) {
