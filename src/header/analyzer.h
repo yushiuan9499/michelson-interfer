@@ -60,6 +60,12 @@ public:
    */
   const std::pair<int, int> getRoiCenter() const;
 
+  /**
+   * 預留空間給結果vector
+   * @param size: 預留的大小
+   */
+  void reserveVector(int size);
+
 public slots:
   /**
    * 計算每一幀在特定方形內的平均值
@@ -69,6 +75,7 @@ public slots:
    * 讓mainWindow更新圖片和圖表
    */
   void calculateMean(const cv::Mat &frame, const bool isLastFrame);
+
 signals:
   // this signal means that the analysis have done 10 frames
   // so the main window have to update

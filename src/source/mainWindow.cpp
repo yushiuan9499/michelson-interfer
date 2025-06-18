@@ -294,6 +294,7 @@ void MainWindow::analyze() {
     // Clear previous results
     lineSeries->clear();
     analyzer->clearResults();
+    analyzer->reserveVector(fileIo->getFrameCount());
     // Load video and start analysis
     fileIo->readFramesAsync();
   }

@@ -78,3 +78,11 @@ const std::pair<int, int> Analyzer::getRoiCenter() const {
   }
   return center;
 }
+
+void Analyzer::reserveVector(int size) {
+  if (size > 0) {
+    results.reserve(size);
+  } else {
+    results.clear(); // Clear if size is invalid
+  }
+}
