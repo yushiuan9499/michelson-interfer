@@ -38,3 +38,7 @@
 4. 按下「分析」按鈕
 ## Screenshot
 <img src="./asset/main.png" alt="效果" width="400"/>
+
+## 備註
+目前已經在windows 11和ubuntu 24.04上測試過。  
+windows的安裝方法還在研究中。
