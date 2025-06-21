@@ -1,12 +1,8 @@
 
 #include "fileIo.h"
+#include <QFile>
 #include <QThread>
 #include <QtConcurrent/QtConcurrent>
-#include <fstream>
-#ifdef _WIN32
-#include <codecvt>
-#include <locale>
-#endif // _WIN32
 
 FileIo::FileIo(QObject *parent) : QObject(parent) {}
 
@@ -58,16 +54,16 @@ void FileIo::openVideo(const std::string &filename) {
   }
 }
 
-int writeCsv(const std::string &filename, const std::vector<double> &data) {
+int writeCsv(const QString &filename, const std::vector<double> &data) {
   int count = data.size();
-#ifdef _WIN32
-  std::wofstream ofs(std::wstring(filename.begin(), filename.end()));
-  ofs.imbue(std::locale(std::locale(), new std::codecvt_utf8<wchar_t>));
-#else
-  std::ofstream ofs(filename);
-#endif // _WIN32
-  for (const auto &val : data) {
-    ofs << val << "\n";
+  QFile file(filename);
+  if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    return -1; // Error opening file
   }
+  QTextStream out(&file);
+  for (const auto &val : data) {
+    out << val << "\n";
+  }
+  file.close();
   return count;
 }

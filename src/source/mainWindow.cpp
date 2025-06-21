@@ -316,9 +316,12 @@ void MainWindow::exportCsv() {
   QString fileName = QFileDialog::getSaveFileName(this, tr("匯出結果"), "",
                                                   tr("CSV檔案 (*.csv)"));
   if (!fileName.isEmpty()) {
-    writeCsv(fileName.toStdString(), this->analyzer->getResults());
+    int ret = writeCsv(fileName, this->analyzer->getResults());
+    if (ret == -1) {
+      QMessageBox::critical(this, "錯誤", "無法打開檔案");
+    }
   } else {
-    QMessageBox::critical(this, tr("錯誤"), tr("無法打開檔案"));
+    QMessageBox::critical(this, tr("錯誤"), tr("請輸入檔名"));
   }
 }
 

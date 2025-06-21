@@ -47,5 +47,5 @@ signals:
  * @param data: 寫入的資料
  * @return: 寫入的資料筆數
  */
-int writeCsv(const std::string &filename, const std::vector<double> &data);
+int writeCsv(const QString &filename, const std::vector<double> &data);
 #endif // FILE_IO_H
