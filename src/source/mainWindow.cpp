@@ -317,6 +317,8 @@ void MainWindow::exportCsv() {
                                                   tr("CSV檔案 (*.csv)"));
   if (!fileName.isEmpty()) {
     writeCsv(fileName.toStdString(), this->analyzer->getResults());
+  } else {
+    QMessageBox::critical(this, tr("錯誤"), tr("無法打開檔案"));
   }
 }
 
