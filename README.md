@@ -7,7 +7,9 @@
 - 速度比Tracker快，也不用數到眼睛脫窗
 - 匯出成csv
 - 自動數光圈變化
-## Dependencies
+## Install
+### 自己編譯
+#### Dependencies
 - qt5
   ```bash
   sudo apt install libqt5charts5-dev qtbase5-dev qt5-qmake
@@ -16,7 +18,7 @@
   ```bash
   sudo apt install libopencv-dev
   ```
-## Install
+#### Build
   ```bash
   # 下載Repository
   git clone git@github.com:yushiuan9499/michelson-interfer.git
@@ -24,21 +26,17 @@
   cd michelson-interfer
   # 編譯
   ./tools/build.sh
+  # 執行檔會在./bin/main
   ```
+### Windows
+到[Release](https://github.com/yushiuan9499/michelson-interfer/releases/)下載最新的壓縮檔，解壓縮後執行`michelsonInterfer.exe`即可。
+### Linux
+到[Release](https://github.com/yushiuan9499/michelson-interfer/releases/)下載最新的AppImage檔，給予執行權限後執行即可。
 ## Usage
 1. 執行檔案
-  ```bash
-  # 進入資料夾
-  cd michelson-interfer
-  # 執行
-  ./bin/main
-  ```
 2. 選擇影片
 3. 按下shift+左鍵，選擇要分析的區域
 4. 按下「分析」按鈕
 ## Screenshot
 <img src="./asset/main.png" alt="效果" width="400"/>
 
-## 備註
-目前已經在windows 11和ubuntu 24.04上測試過。  
-windows的安裝方法還在研究中。
