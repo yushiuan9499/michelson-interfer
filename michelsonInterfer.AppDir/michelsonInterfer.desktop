@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Michelson Interfer
+Exec=AppRun %F
+Icon=michelsonInterfer
+Categories=Science;

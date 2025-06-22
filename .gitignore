@@ -5,3 +5,9 @@ bin/
 build/
 compile_commands.json
 .cache/
+
+# AppImage
+linuxdeployqt*
+appimagetool*
+AppRun
+.DirIcon

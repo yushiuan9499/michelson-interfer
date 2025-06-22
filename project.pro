@@ -9,7 +9,7 @@ OBJECTS_DIR = ../build/obj
 MOC_DIR = ../build/moc
 DESTDIR = ../bin/
 INCPATH += ../src/header /usr/include/opencv4
-LIBS += -L/usr/include/opencv4 -lopencv_core -lopencv_videoio 
+LIBS += -lopencv_core -lopencv_videoio 
 
 # You can make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.

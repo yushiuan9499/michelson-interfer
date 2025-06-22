@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  build-appimage:
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
+    build: ./
+    volumes:
+      - ./:/home/project:rw
