@@ -48,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
 
   // Chart
   lineSeries = new QtCharts::QLineSeries();
+  lineSeries->setColor(Qt::blue);
   chart = new QtCharts::QChart();
   chart->addSeries(lineSeries);
   chart->legend()->hide();
@@ -59,6 +60,54 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
       valueAxisY->setRange(0, 255);
   }
   chartView = new QtCharts::QChartView(chart, this);
+
+  currentLine = new QtCharts::QLineSeries();
+  currentLine->setColor(Qt::red);
+  chart->addSeries(currentLine);
+  thresholdLowLine = new QtCharts::QLineSeries();
+  thresholdLowLine->setColor(Qt::green);
+  chart->addSeries(thresholdLowLine);
+  thresholdHighLine = new QtCharts::QLineSeries();
+  thresholdHighLine->setColor(Qt::green);
+  chart->addSeries(thresholdHighLine);
+
+// gray with transparency
+#define MyGray QColor(200, 200, 200, 128)
+  // 左側灰色區塊
+  auto *leftLower = new QtCharts::QLineSeries();
+  auto *leftUpper = new QtCharts::QLineSeries();
+  leftGrayArea = new QtCharts::QAreaSeries(leftUpper, leftLower);
+  leftGrayArea->setPen(Qt::NoPen);
+  leftGrayArea->setBrush(MyGray);
+  chart->addSeries(leftGrayArea);
+
+  // 右側灰色區塊
+  auto *rightLower = new QtCharts::QLineSeries();
+  auto *rightUpper = new QtCharts::QLineSeries();
+  rightGrayArea = new QtCharts::QAreaSeries(rightUpper, rightLower);
+  rightGrayArea->setPen(Qt::NoPen);
+  rightGrayArea->setBrush(MyGray);
+  chart->addSeries(rightGrayArea);
+#undef MyGray
+
+  {
+    // 取得現有的 X/Y 軸
+    auto axesX = chart->axes(Qt::Horizontal, lineSeries);
+    auto axesY = chart->axes(Qt::Vertical, lineSeries);
+
+    if (!axesX.isEmpty() && !axesY.isEmpty()) {
+      currentLine->attachAxis(axesX.first());
+      currentLine->attachAxis(axesY.first());
+      thresholdLowLine->attachAxis(axesX.first());
+      thresholdLowLine->attachAxis(axesY.first());
+      thresholdHighLine->attachAxis(axesX.first());
+      thresholdHighLine->attachAxis(axesY.first());
+      leftGrayArea->attachAxis(axesX.first());
+      leftGrayArea->attachAxis(axesY.first());
+      rightGrayArea->attachAxis(axesX.first());
+      rightGrayArea->attachAxis(axesY.first());
+    }
+  }
 
   // Image display
   graphicsView = new QGraphicsView(this);
@@ -210,6 +259,13 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent) {
           [this](int value) { this->updateSlider(-1, -1, value); });
   connect(spinFrame, QOverload<int>::of(&QSpinBox::valueChanged), this,
           [this](int value) { this->updateSlider(-1, -1, value); });
+  // Connect threshold spin boxes to update lines
+  connect(editThresholdLow,
+          QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+          [this](double low) { this->updateThresholdLines(low, -1); });
+  connect(editThresholdHigh,
+          QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+          [this](double high) { this->updateThresholdLines(-1, high); });
 }
 
 MainWindow::~MainWindow() {}
@@ -265,6 +321,8 @@ void MainWindow::selectVideo() {
   spinRangeMax->setValue(frameCount - 1);
   spinFrame->setMaximum(frameCount - 1);
   rangeSliderMax->setValue(frameCount - 1);
+
+  updateThresholdLines(editThresholdLow->value(), editThresholdHigh->value());
 }
 
 void MainWindow::analyze() {
@@ -391,6 +449,13 @@ void MainWindow::mousePressEvent(QMouseEvent *event) {
 }
 
 void MainWindow::updateSlider(int min, int max, int value) {
+  // 更新當前線條
+#define drawLine(value)                                                        \
+  {                                                                            \
+    currentLine->clear();                                                      \
+    currentLine->append(value, 0);                                             \
+    currentLine->append(value, 255);                                           \
+  }
   if (min >= 0) {
     if (min > rangeSliderMax->value()) {
       rangeSliderMin->setValue(rangeSliderMax->value());
@@ -402,7 +467,16 @@ void MainWindow::updateSlider(int min, int max, int value) {
     if (min > frameSlider->value()) {
       frameSlider->setValue(min);
       spinFrame->setValue(min);
+      drawLine(min);
     }
+    auto upperSeries = leftGrayArea->upperSeries();
+    auto lowerSeries = leftGrayArea->lowerSeries();
+    upperSeries->clear();
+    lowerSeries->clear();
+    upperSeries->append(0, 255);
+    upperSeries->append(spinRangeMin->value(), 255);
+    lowerSeries->append(0, 0);
+    lowerSeries->append(spinRangeMin->value(), 0);
   }
   if (max >= 0) {
     if (max < rangeSliderMin->value()) {
@@ -415,7 +489,16 @@ void MainWindow::updateSlider(int min, int max, int value) {
     if (max < frameSlider->value()) {
       frameSlider->setValue(max);
       spinFrame->setValue(max);
+      drawLine(max);
     }
+    auto upperSeries = rightGrayArea->upperSeries();
+    auto lowerSeries = rightGrayArea->lowerSeries();
+    upperSeries->clear();
+    lowerSeries->clear();
+    upperSeries->append(spinRangeMax->value(), 255);
+    upperSeries->append(fileIo->getFrameCount() - 1, 255);
+    lowerSeries->append(spinRangeMax->value(), 0);
+    lowerSeries->append(fileIo->getFrameCount() - 1, 0);
   }
   if (value >= 0) {
     if (value < rangeSliderMin->value()) {
@@ -434,5 +517,21 @@ void MainWindow::updateSlider(int min, int max, int value) {
     imageItem = graphicsScene->addPixmap(QPixmap::fromImage(img));
     graphicsScene->setSceneRect(img.rect());
     updateRoi();
+
+    drawLine(value);
+  }
+#undef drawLine
+}
+
+void MainWindow::updateThresholdLines(double low, double high) {
+  if (low >= 0) {
+    thresholdLowLine->clear();
+    thresholdLowLine->append(0, low);
+    thresholdLowLine->append(fileIo->getFrameCount() - 1, low);
+  }
+  if (high >= 0) {
+    thresholdHighLine->clear();
+    thresholdHighLine->append(0, high);
+    thresholdHighLine->append(fileIo->getFrameCount() - 1, high);
   }
 }

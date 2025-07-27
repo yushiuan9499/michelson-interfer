@@ -2,6 +2,7 @@
 #define MAIN_WINDOW_H
 #include "analyzer.h"
 #include "fileIo.h"
+#include <QAreaSeries>
 #include <QChartView>
 #include <QDoubleSpinBox>
 #include <QLabel>
@@ -33,6 +34,13 @@ private:
   QtCharts::QChartView *chartView;
   QtCharts::QLineSeries *lineSeries;
   QtCharts::QChart *chart;
+  // 輔助線
+  QtCharts::QLineSeries *currentLine = nullptr;
+  QtCharts::QLineSeries *thresholdLowLine = nullptr;
+  QtCharts::QLineSeries *thresholdHighLine = nullptr;
+  // 左右兩邊不重要的區塊
+  QtCharts::QAreaSeries *leftGrayArea = nullptr;
+  QtCharts::QAreaSeries *rightGrayArea = nullptr;
 
   // Image display
   QGraphicsView *graphicsView;
@@ -40,10 +48,12 @@ private:
   QGraphicsPixmapItem *imageItem;
   QGraphicsItem *roiCrossItem;
   QGraphicsRectItem *roiRectItem;
+
   // Sliders
   QSlider *frameSlider;
   QSlider *rangeSliderMin;
   QSlider *rangeSliderMax;
+
   // SpinBox for frame selection
   QSpinBox *spinRangeMin;
   QSpinBox *spinRangeMax;
@@ -91,6 +101,13 @@ private:
    * @param value: 當前值, -1表示不更新
    */
   void updateSlider(int min, int max, int value);
+
+  /**
+   * 更新圖表上的threshold線
+   * @param low: 低閾值， 小於0表示不更新
+   * @param high: 高閾值， 小於0表示不更新
+   */
+  void updateThresholdLines(double low, double high);
 public slots:
   /**
    * 更新圖表和圖片
